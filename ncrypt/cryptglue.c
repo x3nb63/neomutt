@@ -37,6 +37,7 @@
 #include "config.h"
 #include <stdio.h>
 #include "mutt/mutt.h"
+#include "config/lib.h"
 #include "crypt_mod.h"
 #include "globals.h"
 #include "ncrypt.h"
