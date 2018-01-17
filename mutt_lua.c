@@ -30,11 +30,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "mutt/mutt.h"
+#include "config/lib.h"
 #include "mutt.h"
 #include "mutt_lua.h"
 #include "globals.h"
 #include "mailbox.h"
-#include "mbtable.h"
 #include "mutt_commands.h"
 #include "mutt_options.h"
 #include "options.h"
@@ -117,7 +117,7 @@ static int lua_mutt_set(lua_State *l)
   int rc = -1;
   const char *param = lua_tostring(l, -2);
   mutt_debug(2, " * lua_mutt_set(%s)\n", param);
-  struct Option opt;
+  struct ConfigDef opt;
   char err_str[LONG_STRING];
   struct Buffer err = { 0 };
   err.data = err_str;
@@ -206,7 +206,7 @@ static int lua_mutt_get(lua_State *l)
 {
   const char *param = lua_tostring(l, -1);
   mutt_debug(2, " * lua_mutt_get(%s)\n", param);
-  struct Option opt;
+  struct ConfigDef opt;
 
   if (mutt_option_get(param, &opt))
   {

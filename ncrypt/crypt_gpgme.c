@@ -49,6 +49,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "mutt/mutt.h"
+#include "config/lib.h"
 #include "mutt.h"
 #include "alias.h"
 #include "body.h"

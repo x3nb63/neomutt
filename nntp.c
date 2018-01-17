@@ -35,6 +35,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include "mutt/mutt.h"
+#include "config/lib.h"
 #include "conn/conn.h"
 #include "mutt.h"
 #include "nntp.h"
