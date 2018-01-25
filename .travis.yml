@@ -10,51 +10,23 @@ dist: trusty
 
 language: c
 compiler: gcc
-cache: ccache
 
 addons:
   apt:
     packages:
-      - autopoint
-      - docbook-simple
-      - docbook-xsl
-      - gettext
-      - libdb-dev
-      - libgdbm-dev
-      - libgnutls-dev
-      - libgpgme11-dev
-      - libgss-dev
-      - libkyotocabinet-dev
-      - liblmdb-dev
-      - liblua5.2-dev
-      - libnotmuch-dev
-      - libqdbm-dev
-      - libsasl2-dev
-      - libslang2-dev
-      - libssl-dev
-      - libtokyocabinet-dev
-      - libxml2-utils
-      - lua5.2
-      - lynx
-      - xsltproc
+      - doxygen
+      - graphviz
 
 git:
   depth: 3
 
-install:
-  - git clone --depth 1 https://github.com/neomutt/travis-build.git ~/config
-
-before_script:
-  - ccache --zero-stats
-  - export ANSI_CLEAR
-  - export -f travis_fold
-  - export -f travis_nanoseconds
-  - export -f travis_time_finish
-  - export -f travis_time_start
+env:
+  global:
+    - IGNORE: "Consider increasing DOT_GRAPH_MAX_NODES"
 
 script:
-  - ~/config/build
-
-after_script:
-  - ccache --show-stats
+  - .travis/gen-tables.sh conn/*.c hcache/hcache.h imap/*.c mutt/*.c ncrypt/*.c addrbook.c body.c complete.c compress.c copy.c editmsg.c enter.c envelope.c filter.c flags.c from.c history.c hook.c main.c mutt_account.c mutt_logging.c mutt_signal.c mutt_socket.c mutt_window.c mx.c newsrc.c nntp.c pop.c pop_auth.c postpone.c progress.c resize.c rfc1524.c safe_asprintf.c sidebar.c status.c system.c tags.c terminal.c version.c
+  - doxygen doxygen/doxygen.conf
+  - grep -v "$IGNORE" doxygen-build.txt | tee tmp.txt
+  - test ! -s tmp.txt
 
