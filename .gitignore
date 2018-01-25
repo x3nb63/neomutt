@@ -39,3 +39,7 @@ hcache/hcversion.h
 *~
 tags
 
+# Doxygen extras
+html
+doxygen-build.txt
+*.inc
