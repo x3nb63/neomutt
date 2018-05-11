@@ -6,7 +6,7 @@ set -e
 git clone --recursive https://github.com/neomutt/neomutt.github.io
 
 (
-cd ../neomutt.github.io/doxygen
+cd ../neomutt.github.io/code
 
 # Remove the old docs
 git rm -r ./*
