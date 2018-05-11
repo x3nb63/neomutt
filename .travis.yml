@@ -29,4 +29,5 @@ script:
   - doxygen doxygen/doxygen.conf
   - grep -v "$IGNORE" doxygen-build.txt | tee tmp.txt
   - test ! -s tmp.txt
+  - .travis/push-docs.sh
 
