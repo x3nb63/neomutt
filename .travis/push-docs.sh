@@ -14,7 +14,8 @@ git rm -r ./*
 # Add the newly generated docs
 cp -r ../../html/* ./
 git commit --all -m "Update docs"
-git push origin master
+
+# git push origin master
 )
 
 git commit --all -m "Updated docs submodule"
