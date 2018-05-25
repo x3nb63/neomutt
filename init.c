@@ -3692,6 +3692,8 @@ void mutt_free_opts(void)
   mutt_hash_destroy(&TagFormats);
   mutt_hash_destroy(&TagTransforms);
 
+  mutt_groups_free();
+
   /* Lists of strings */
   mutt_list_free(&AlternativeOrderList);
   mutt_list_free(&AutoViewList);
@@ -3761,6 +3763,8 @@ int mutt_init(bool skip_sys_rc, struct ListHead *commands)
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
   err.dptr = err.data;
+
+  mutt_groups_init();
 
   /* reverse alias keys need to be strdup'ed because of idna conversions */
   ReverseAliases = mutt_hash_create(
