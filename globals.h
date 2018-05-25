@@ -76,14 +76,14 @@ WHERE struct ListHead AttachExclude INITVAL(STAILQ_HEAD_INITIALIZER(AttachExclud
 WHERE struct ListHead InlineAllow INITVAL(STAILQ_HEAD_INITIALIZER(InlineAllow));
 WHERE struct ListHead InlineExclude INITVAL(STAILQ_HEAD_INITIALIZER(InlineExclude));
 
-WHERE struct RegexList *Alternates;
-WHERE struct RegexList *UnAlternates;
-WHERE struct RegexList *MailLists;
-WHERE struct RegexList *UnMailLists;
-WHERE struct RegexList *SubscribedLists;
-WHERE struct RegexList *UnSubscribedLists;
+WHERE struct RegexList Alternates INITVAL(STAILQ_HEAD_INITIALIZER(Alternates));
+WHERE struct RegexList UnAlternates INITVAL(STAILQ_HEAD_INITIALIZER(UnAlternates));
+WHERE struct RegexList MailLists INITVAL(STAILQ_HEAD_INITIALIZER(MailLists));
+WHERE struct RegexList UnMailLists INITVAL(STAILQ_HEAD_INITIALIZER(UnMailLists));
+WHERE struct RegexList SubscribedLists INITVAL(STAILQ_HEAD_INITIALIZER(SubscribedLists));
+WHERE struct RegexList UnSubscribedLists INITVAL(STAILQ_HEAD_INITIALIZER(UnSubscribedLists));
 WHERE struct ReplaceList *SpamList;
-WHERE struct RegexList *NoSpamList;
+WHERE struct RegexList NoSpamList INITVAL(STAILQ_HEAD_INITIALIZER(NoSpamList));
 WHERE struct ReplaceList *SubjectRegexList;
 
 WHERE unsigned short Counter;

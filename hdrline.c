@@ -67,17 +67,17 @@ enum FlagChars
 
 bool mutt_is_mail_list(struct Address *addr)
 {
-  if (!mutt_regexlist_match(UnMailLists, addr->mailbox))
-    return mutt_regexlist_match(MailLists, addr->mailbox);
+  if (!mutt_regexlist_match(&UnMailLists, addr->mailbox))
+    return mutt_regexlist_match(&MailLists, addr->mailbox);
   return false;
 }
 
 bool mutt_is_subscribed_list(struct Address *addr)
 {
-  if (!mutt_regexlist_match(UnMailLists, addr->mailbox) &&
-      !mutt_regexlist_match(UnSubscribedLists, addr->mailbox))
+  if (!mutt_regexlist_match(&UnMailLists, addr->mailbox) &&
+      !mutt_regexlist_match(&UnSubscribedLists, addr->mailbox))
   {
-    return mutt_regexlist_match(SubscribedLists, addr->mailbox);
+    return mutt_regexlist_match(&SubscribedLists, addr->mailbox);
   }
   return false;
 }

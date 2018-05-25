@@ -118,16 +118,16 @@ void mutt_regex_free(struct Regex **r)
 
 /**
  * mutt_regexlist_add - Compile a regex string and add it to a list
- * @param rl    RegexList to add to
+ * @param head    RegexList to add to
  * @param str   String to compile into a regex
  * @param flags Flags
  * @param err   Buffer for error messages
  * @retval 0  Success, Regex compiled and added to the list
  * @retval -1 Error, see message in 'err'
  */
-int mutt_regexlist_add(struct RegexList **rl, const char *str, int flags, struct Buffer *err)
+int mutt_regexlist_add(struct RegexList *head, const char *str, int flags, struct Buffer *err)
 {
-  struct RegexList *t = NULL, *last = NULL;
+  struct RegexListNode *t = NULL, *last = NULL;
   struct Regex *rx = NULL;
 
   if (!str || !*str)
@@ -140,27 +140,29 @@ int mutt_regexlist_add(struct RegexList **rl, const char *str, int flags, struct
     return -1;
   }
 
-  /* check to make sure the item is not already on this rl */
-  for (last = *rl; last; last = last->next)
+  /* check to make sure the item is not already on this regexlist */
+  STAILQ_FOREACH_FROM(last, head, entries)
   {
     if (mutt_str_strcasecmp(rx->pattern, last->regex->pattern) == 0)
     {
-      /* already on the rl, so just ignore it */
+      /* already on the regexlist, so just ignore it */
       last = NULL;
       break;
     }
-    if (!last->next)
+    /* -_-_- */
+    if (!STAILQ_NEXT(last, entries))
       break;
   }
-
-  if (!*rl || last)
+  /* if rl is NULL or last is non-NULL  */
+  if (STAILQ_EMPTY(head) || last)
   {
     t = mutt_regexlist_new();
     t->regex = rx;
+    /* -_-_- */
     if (last)
-      last->next = t;
+      STAILQ_INSERT_AFTER(head, t, last,entries);
     else
-      *rl = t;
+      STAILQ_INSERT_HEAD(head, t, entries);
   }
   else /* duplicate */
     mutt_regex_free(&rx);
@@ -170,41 +172,40 @@ int mutt_regexlist_add(struct RegexList **rl, const char *str, int flags, struct
 
 /**
  * mutt_regexlist_free - Free a RegexList object
- * @param rl RegexList to free
+ * @param head RegexList to free
  */
-void mutt_regexlist_free(struct RegexList **rl)
+void mutt_regexlist_free(struct RegexList *head)
 {
-  struct RegexList *p = NULL;
+  struct RegexListNode *np = STAILQ_FIRST(head), *next = NULL;
 
-  if (!rl)
-    return;
-  while (*rl)
+  while(np)
   {
-    p = *rl;
-    *rl = (*rl)->next;
-    mutt_regex_free(&p->regex);
-    FREE(&p);
+    mutt_regex_free(&np->regex);
+    next = STAILQ_NEXT(np, entries);
+    FREE(&np);
+    np = next;
   }
 }
 
 /**
  * mutt_regexlist_match - Does a string match any Regex in the list?
- * @param rl  RegexList to match against
+ * @param head  RegexList to match against
  * @param str String to compare
  * @retval true String matches one of the Regexes in the list
  */
-bool mutt_regexlist_match(struct RegexList *rl, const char *str)
+bool mutt_regexlist_match(struct RegexList *head, const char *str)
 {
+  struct RegexListNode *np = NULL;
   if (!str)
     return false;
 
-  for (; rl; rl = rl->next)
+  STAILQ_FOREACH(np, head, entries)
   {
-    if (!rl->regex || !rl->regex->regex)
+    if (!np->regex || !np->regex->regex)
       continue;
-    if (regexec(rl->regex->regex, str, (size_t) 0, (regmatch_t *) 0, (int) 0) == 0)
+    if (regexec(np->regex->regex, str, (size_t) 0, (regmatch_t *) 0, (int) 0) == 0)
     {
-      mutt_debug(5, "%s matches %s\n", str, rl->regex->pattern);
+      mutt_debug(5, "%s matches %s\n", str, np->regex->pattern);
       return true;
     }
   }
@@ -216,52 +217,39 @@ bool mutt_regexlist_match(struct RegexList *rl, const char *str)
  * mutt_regexlist_new - Create a new RegexList
  * @retval ptr New RegexList object
  */
-struct RegexList *mutt_regexlist_new(void)
+struct RegexListNode *mutt_regexlist_new(void)
 {
-  return mutt_mem_calloc(1, sizeof(struct RegexList));
+  return mutt_mem_calloc(1, sizeof(struct RegexListNode));
 }
 
 /**
  * mutt_regexlist_remove - Remove a Regex from a list
- * @param rl  RegexList to alter
+ * @param head  RegexList to alter
  * @param str Pattern to remove from the list
  * @retval 0  Success, pattern was found and removed from the list
  * @retval -1 Error, pattern wasn't found
  *
  * If the pattern is "*", then all the Regexes are removed.
  */
-int mutt_regexlist_remove(struct RegexList **rl, const char *str)
+int mutt_regexlist_remove(struct RegexList *head, const char *str)
 {
-  struct RegexList *p = NULL, *last = NULL;
+  struct RegexListNode *np = NULL;
   int rc = -1;
 
   if (mutt_str_strcmp("*", str) == 0)
   {
-    mutt_regexlist_free(rl); /* "unCMD *" means delete all current entries */
+    mutt_regexlist_free(head); /* "unCMD *" means delete all current entries */
     rc = 0;
   }
   else
   {
-    p = *rl;
-    last = NULL;
-    while (p)
+    STAILQ_FOREACH(np, head, entries)
     {
-      if (mutt_str_strcasecmp(str, p->regex->pattern) == 0)
-      {
-        mutt_regex_free(&p->regex);
-        if (last)
-          last->next = p->next;
-        else
-          (*rl) = p->next;
-        FREE(&p);
-        rc = 0;
-      }
-      else
-      {
-        last = p;
-        p = p->next;
-      }
+      if (mutt_str_strcasecmp(str, np->regex->pattern) == 0)
+        mutt_regex_free(&np->regex);
+
     }
+    rc = 0;
   }
   return rc;
 }
