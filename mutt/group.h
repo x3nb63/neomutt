@@ -31,8 +31,6 @@ struct Address;
 struct Buffer;
 struct Hash;
 
-extern struct Hash *Groups;
-
 #define MUTT_GROUP   0
 #define MUTT_UNGROUP 1
 

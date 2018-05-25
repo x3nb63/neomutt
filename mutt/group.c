@@ -36,7 +36,15 @@
 #include "regex3.h"
 #include "string2.h"
 
-struct Hash *Groups;
+static struct Hash *groups(void)
+{
+  static struct Hash *g = NULL;
+  if (g == NULL)
+  {
+    mutt_hash_create(1031, 0);
+  }
+  return g;
+}
 
 struct Group *mutt_pattern_group(const char *k)
 {
@@ -45,13 +53,13 @@ struct Group *mutt_pattern_group(const char *k)
   if (!k)
     return 0;
 
-  p = mutt_hash_find(Groups, k);
+  p = mutt_hash_find(groups(), k);
   if (!p)
   {
     mutt_debug(2, "Creating group %s.\n", k);
     p = mutt_mem_calloc(1, sizeof(struct Group));
     p->name = mutt_str_strdup(k);
-    mutt_hash_insert(Groups, p->name, p);
+    mutt_hash_insert(groups(), p->name, p);
   }
 
   return p;
@@ -61,7 +69,7 @@ static void group_remove(struct Group *g)
 {
   if (!g)
     return;
-  mutt_hash_delete(Groups, g->name, g);
+  mutt_hash_delete(groups(), g->name, g);
   mutt_addr_free(&g->as);
   mutt_regexlist_free(&g->rs);
   FREE(&g->name);
