@@ -41,7 +41,6 @@
 #include "context.h"
 #include "envelope.h"
 #include "filter.h"
-#include "group.h"
 #include "hcache/hcache.h"
 #include "header.h"
 #include "history.h"

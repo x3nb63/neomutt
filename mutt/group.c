@@ -21,12 +21,22 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @page group Group of addresses
+ *
+ * Group of addresses.
+ */
+
 #include "config.h"
-#include <stdlib.h>
-#include "mutt/mutt.h"
+#include "address.h"
 #include "group.h"
-#include "globals.h"
-#include "protos.h"
+#include "hash.h"
+#include "logging.h"
+#include "memory.h"
+#include "regex3.h"
+#include "string2.h"
+
+struct Hash *Groups;
 
 struct Group *mutt_pattern_group(const char *k)
 {
@@ -131,7 +141,7 @@ static void group_add_addrlist(struct Group *g, struct Address *a)
     ;
 
   q = mutt_addr_copy_list(a, false);
-  q = mutt_remove_xrefs(g->as, q);
+  q = mutt_addr_remove_xrefs(g->as, q);
   *p = q;
 }
 

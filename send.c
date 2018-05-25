@@ -79,49 +79,6 @@ static void append_signature(FILE *f)
 }
 
 /**
- * mutt_remove_xrefs - Remove cross-references
- *
- * Remove addresses from "b" which are contained in "a"
- */
-struct Address *mutt_remove_xrefs(struct Address *a, struct Address *b)
-{
-  struct Address *p = NULL, *prev = NULL;
-
-  struct Address *top = b;
-  while (b)
-  {
-    for (p = a; p; p = p->next)
-    {
-      if (mutt_addr_cmp(p, b))
-        break;
-    }
-    if (p)
-    {
-      if (prev)
-      {
-        prev->next = b->next;
-        b->next = NULL;
-        mutt_addr_free(&b);
-        b = prev;
-      }
-      else
-      {
-        top = top->next;
-        b->next = NULL;
-        mutt_addr_free(&b);
-        b = top;
-      }
-    }
-    else
-    {
-      prev = b;
-      b = b->next;
-    }
-  }
-  return top;
-}
-
-/**
  * remove_user - Remove any address which matches the current user
  * @param a          List of addresses
  * @param leave_only If set, don't remove the user's address if it it the only
@@ -656,7 +613,7 @@ void mutt_fix_reply_recipients(struct Envelope *env)
   /* the CC field can get cluttered, especially with lists */
   env->to = mutt_remove_duplicates(env->to);
   env->cc = mutt_remove_duplicates(env->cc);
-  env->cc = mutt_remove_xrefs(env->to, env->cc);
+  env->cc = mutt_addr_remove_xrefs(env->to, env->cc);
 
   if (env->cc && !env->to)
   {
