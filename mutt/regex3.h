@@ -25,6 +25,7 @@
 
 #include <regex.h>
 #include <stdbool.h>
+#include "queue.h"
 
 struct Buffer;
 

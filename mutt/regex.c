@@ -150,6 +150,7 @@ int mutt_regexlist_add(struct RegexList *head, const char *str, int flags, struc
       break;
     }
     /* -_-_- */
+    /* In my view, this is just a for loop, and using STAILQ_FOREACH would be ok,i am not sure about it*/
     if (!STAILQ_NEXT(last, entries))
       break;
   }
@@ -160,7 +161,7 @@ int mutt_regexlist_add(struct RegexList *head, const char *str, int flags, struc
     t->regex = rx;
     /* -_-_- */
     if (last)
-      STAILQ_INSERT_AFTER(head, t, last,entries);
+      STAILQ_INSERT_TAIL(head, t, entries);
     else
       STAILQ_INSERT_HEAD(head, t, entries);
   }
@@ -233,7 +234,7 @@ struct RegexListNode *mutt_regexlist_new(void)
  */
 int mutt_regexlist_remove(struct RegexList *head, const char *str)
 {
-  struct RegexListNode *np = NULL;
+  struct RegexListNode *np = STAILQ_FIRST(head), *next = NULL;
   int rc = -1;
 
   if (mutt_str_strcmp("*", str) == 0)
@@ -243,11 +244,14 @@ int mutt_regexlist_remove(struct RegexList *head, const char *str)
   }
   else
   {
-    STAILQ_FOREACH(np, head, entries)
+    /* I simplized code with STAILQ, i am not sure here too, please corect me*/
+    while(np)
     {
       if (mutt_str_strcasecmp(str, np->regex->pattern) == 0)
         mutt_regex_free(&np->regex);
-
+      next = STAILQ_NEXT(np, entries);
+      FREE(&np);
+      np = next;
     }
     rc = 0;
   }
