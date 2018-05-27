@@ -25,7 +25,7 @@
 
 #include <regex.h>
 #include <stdbool.h>
-#include "queue.h"
+#include "mutt/queue.h"
 
 struct Buffer;
 
