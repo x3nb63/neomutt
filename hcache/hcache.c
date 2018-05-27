@@ -912,7 +912,7 @@ header_cache_t *mutt_hcache_open(const char *path, const char *folder, hcache_na
     } digest;
     struct Md5Ctx ctx;
     struct ReplaceList *spam = NULL;
-    struct RegexListNode *nospam = STAILQ_FIRST(NoSpamList), *next = NULL;
+    struct RegexListNode *nospam = NULL, *next = NULL;
 
     hcachever = HCACHEVER;
 
