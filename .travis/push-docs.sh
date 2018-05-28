@@ -3,7 +3,7 @@
 # exit early if any command fails
 set -e
 
-git clone --recursive https://github.com/neomutt/neomutt.github.io
+git clone --recursive https://github.com/neomutt/test-neomutt.github.io
 
 (
 cd neomutt.github.io/code
@@ -15,7 +15,7 @@ git rm -r --quiet ./*
 cp -r ../../html/* ./
 git commit --all -m "Update docs"
 
-# git push origin master
+git push origin master
 )
 
 git commit --all -m "Updated docs submodule"
