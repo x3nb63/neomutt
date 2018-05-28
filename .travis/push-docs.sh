@@ -15,7 +15,7 @@ git rm -r --quiet ./*
 cp -r ../../html/* ./
 git commit --all -m "Update docs"
 
-# git push origin master
+git push origin master
 )
 
 git commit --all -m "Updated docs submodule"
