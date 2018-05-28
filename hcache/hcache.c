@@ -57,7 +57,6 @@
 #include "header.h"
 #include "protos.h"
 #include "tags.h"
-#include "mutt/regex3.h"
 
 static unsigned int hcachever = 0x0;
 
@@ -929,11 +928,6 @@ header_cache_t *mutt_hcache_open(const char *path, const char *folder, hcache_na
     }
 
     /* Mix in user's nospam list */
-    /*for (nospam = &NoSpamList; nospam; nospam = nospam->next)
-    {
-      mutt_md5_process(nospam->regex->pattern, &ctx);
-    }
-    */
     /* Ha, stailq breaks silent here */
     STAILQ_FOREACH(nospam, &NoSpamList, entries)
     {
