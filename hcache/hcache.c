@@ -935,7 +935,7 @@ header_cache_t *mutt_hcache_open(const char *path, const char *folder, hcache_na
     }
     */
     /* Ha, stailq breaks silent here */
-    STAILQ_FOREACH(nospam, NoSpamList, entries)
+    STAILQ_FOREACH(nospam, &NoSpamList, entries)
     {
       mutt_md5_process(nospam->regex->pattern, &ctx);
 
