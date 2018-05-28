@@ -16,7 +16,7 @@ eval "$(ssh-agent -s)"
 ssh-add travis-deploy-doxygen
 ssh-add travis-deploy-website
 
-git clone --recursive https://github.com/neomutt/test-neomutt.github.io website
+git clone --recursive git@github.com:neomutt/test-neomutt.github.io website
 
 (
   cd website/code
