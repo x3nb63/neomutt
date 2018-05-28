@@ -353,7 +353,7 @@ static void buffy_check(struct Buffy *tmp, struct stat *contex_sb, bool check_st
   int orig_count, orig_unread, orig_flagged;
 #endif
 
-  memset(&sb, 0, sizeof (sb));
+  memset(&sb, 0, sizeof(sb));
 
 #ifdef USE_SIDEBAR
   orig_new = tmp->new;
@@ -539,6 +539,17 @@ void mutt_update_mailbox(struct Buffy *b)
   return;
 }
 
+/**
+ * mutt_parse_mailboxes - Parse the 'mailboxes' command
+ * @param path Temporary Buffer space
+ * @param s    Buffer containing string to be parsed
+ * @param data Flags associated with the command
+ * @param err  Buffer for error messages
+ * @retval  0 Success
+ * @retval -1 Error
+ *
+ * This is also used by 'virtual-mailboxes'.
+ */
 int mutt_parse_mailboxes(struct Buffer *path, struct Buffer *s,
                          unsigned long data, struct Buffer *err)
 {
@@ -630,6 +641,17 @@ int mutt_parse_mailboxes(struct Buffer *path, struct Buffer *s,
   return 0;
 }
 
+/**
+ * mutt_parse_unmailboxes - Parse the 'unmailboxes' command
+ * @param path Temporary Buffer space
+ * @param s    Buffer containing string to be parsed
+ * @param data Flags associated with the command
+ * @param err  Buffer for error messages
+ * @retval  0 Success
+ * @retval -1 Error
+ *
+ * This is also used by 'unvirtual-mailboxes'
+ */
 int mutt_parse_unmailboxes(struct Buffer *path, struct Buffer *s,
                            unsigned long data, struct Buffer *err)
 {

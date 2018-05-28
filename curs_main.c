@@ -127,7 +127,7 @@ static const char *NoVisible = N_("No visible messages.");
   }
 
 #define CHECK_ATTACH                                                           \
-  if (OptAttachMsg)                                                          \
+  if (OptAttachMsg)                                                            \
   {                                                                            \
     mutt_flushinp();                                                           \
     mutt_error(_(Function_not_permitted_in_attach_message_mode));              \
@@ -1445,20 +1445,20 @@ int mutt_index_menu(void)
           {
             snprintf(buf2, sizeof(buf2), "!~R!~D~s%s",
                      Context->pattern ? Context->pattern : ".*");
-            OptHideRead = true;
           }
           else
           {
             mutt_str_strfcpy(buf2, Context->pattern + 8, sizeof(buf2));
             if (!*buf2 || (strncmp(buf2, ".*", 2) == 0))
               snprintf(buf2, sizeof(buf2), "~A");
-            OptHideRead = false;
           }
           FREE(&Context->pattern);
           Context->pattern = mutt_str_strdup(buf2);
+          mutt_pattern_func(MUTT_LIMIT, NULL);
         }
 
         if (((op == OP_LIMIT_CURRENT_THREAD) && mutt_limit_current_thread(CURHDR)) ||
+            (op == OP_TOGGLE_READ) ||
             ((op == OP_MAIN_LIMIT) &&
              (mutt_pattern_func(MUTT_LIMIT,
                                 _("Limit to messages matching: ")) == 0)))

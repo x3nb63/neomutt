@@ -39,6 +39,7 @@
 
 struct Address;
 struct Alias;
+struct AliasList;
 struct Body;
 struct Buffer;
 struct ColorLineHead;
@@ -141,7 +142,7 @@ const char *mutt_fqdn(short may_hide_host);
 void mutt_account_hook(const char *url);
 void mutt_add_to_reference_headers(struct Envelope *env, struct Envelope *curenv);
 void mutt_adv_mktemp(char *s, size_t l);
-void mutt_alias_menu(char *buf, size_t buflen, struct Alias *aliases);
+void mutt_alias_menu(char *buf, size_t buflen, struct AliasList *aliases);
 void mutt_sig_allow_interrupt(int disposition);
 int mutt_body_handler(struct Body *b, struct State *s);
 int mutt_bounce_message(FILE *fp, struct Header *h, struct Address *to);
@@ -164,7 +165,7 @@ int mutt_label_message(struct Header *hdr);
 void mutt_make_label_hash(struct Context *ctx);
 void mutt_label_hash_add(struct Context *ctx, struct Header *hdr);
 void mutt_label_hash_remove(struct Context *ctx, struct Header *hdr);
-int mutt_label_complete(char *buffer, size_t len, int numtabs);
+int mutt_label_complete(char *buf, size_t buflen, int numtabs);
 void mutt_encode_descriptions(struct Body *b, short recurse);
 void mutt_encode_path(char *dest, size_t dlen, const char *src);
 void mutt_enter_command(void);
@@ -222,7 +223,7 @@ void mutt_view_attachments(struct Header *hdr);
 void mutt_write_address_list(struct Address *addr, FILE *fp, int linelen, bool display);
 bool mutt_addr_is_user(struct Address *addr);
 int mutt_addwch(wchar_t wc);
-int mutt_alias_complete(char *s, size_t buflen);
+int mutt_alias_complete(char *buf, size_t buflen);
 void mutt_alias_add_reverse(struct Alias *t);
 void mutt_alias_delete_reverse(struct Alias *t);
 int mutt_alloc_color(int fg, int bg);
@@ -239,18 +240,18 @@ int mutt_check_mime_type(const char *s);
 int mutt_check_overwrite(const char *attname, const char *path, char *fname,
                          size_t flen, int *append, char **directory);
 int mutt_check_traditional_pgp(struct Header *h, int *redraw);
-int mutt_command_complete(char *buffer, size_t len, int pos, int numtabs);
-int mutt_var_value_complete(char *buffer, size_t len, int pos);
+int mutt_command_complete(char *buf, size_t buflen, int pos, int numtabs);
+int mutt_var_value_complete(char *buf, size_t buflen, int pos);
 void myvar_set(const char *var, const char *val);
 #ifdef USE_NOTMUCH
-bool mutt_nm_query_complete(char *buffer, size_t len, int pos, int numtabs);
-bool mutt_nm_tag_complete(char *buffer, size_t len, int numtabs);
+bool mutt_nm_query_complete(char *buf, size_t buflen, int pos, int numtabs);
+bool mutt_nm_tag_complete(char *buf, size_t buflen, int numtabs);
 #endif
-int mutt_complete(char *s, size_t slen);
+int mutt_complete(char *buf, size_t buflen);
 int mutt_compose_attachment(struct Body *a);
 int mutt_decode_save_attachment(FILE *fp, struct Body *m, char *path, int displaying, int flags);
 int mutt_display_message(struct Header *cur);
-int mutt_dump_variables(int hide_sensitive);
+int mutt_dump_variables(bool hide_sensitive);
 int mutt_edit_attachment(struct Body *a);
 int mutt_edit_message(struct Context *ctx, struct Header *hdr);
 int mutt_view_message(struct Context *ctx, struct Header *hdr);
@@ -345,7 +346,7 @@ uint32_t mutt_rand32(void);
 uint64_t mutt_rand64(void);
 int mutt_randbuf(void *out, size_t len);
 
-struct Address *alias_reverse_lookup(struct Address *a);
+struct Address *mutt_alias_reverse_lookup(struct Address *a);
 
 int getdnsdomainname(char *d, size_t len);
 

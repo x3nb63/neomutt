@@ -396,7 +396,7 @@ static void decode_uuencoded(struct State *s, long len, int istext, iconv_t cd)
   state_reset_prefix(s);
 }
 
-  /* ----------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------
    * A (not so) minimal implementation of RFC1563.
    */
 
@@ -1191,7 +1191,7 @@ static int multilingual_handler(struct Body *a, struct State *s)
   int rc = 0;
   struct Body *first_part = NULL;
   struct Body *zxx_part = NULL;
-  char *lang;
+  char *lang = NULL;
 
   mutt_debug(2, "RFC8255 >> entering in handler multilingual handler\n");
   if ((a->encoding == ENCBASE64) || (a->encoding == ENCQUOTEDPRINTABLE) ||
@@ -1216,9 +1216,13 @@ static int multilingual_handler(struct Body *a, struct State *s)
   else
     b = a;
 
-  mutt_debug(2, "RFC8255 >> preferred_languages set in config to '%s'\n", PreferredLanguages);
-  char *preferred_languages = mutt_str_strdup(PreferredLanguages);
-  lang = strtok(preferred_languages, ",");
+  char *preferred_languages = NULL;
+  if (PreferredLanguages)
+  {
+    mutt_debug(2, "RFC8255 >> preferred_languages set in config to '%s'\n", PreferredLanguages);
+    preferred_languages = mutt_str_strdup(PreferredLanguages);
+    lang = strtok(preferred_languages, ",");
+  }
 
   while (lang)
   {
@@ -1270,6 +1274,7 @@ static int multilingual_handler(struct Body *a, struct State *s)
   if (mustfree)
     mutt_body_free(&a);
 
+  FREE(&preferred_languages);
   return rc;
 }
 
@@ -1592,10 +1597,8 @@ static int external_body_handler(struct Body *b, struct State *s)
   {
     if (s->flags & (MUTT_DISPLAY | MUTT_PRINTING))
     {
-      char *length = NULL;
       char pretty_size[10];
-
-      length = mutt_param_get(&b->parameter, "length");
+      char *length = mutt_param_get(&b->parameter, "length");
       if (length)
       {
         mutt_str_pretty_size(pretty_size, sizeof(pretty_size), strtol(length, NULL, 10));
