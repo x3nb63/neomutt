@@ -6,7 +6,7 @@ set -e
 git clone --recursive https://github.com/neomutt/test-neomutt.github.io
 
 (
-cd neomutt.github.io/code
+cd test-neomutt.github.io/code
 
 # Remove the old docs
 git rm -r --quiet ./*
@@ -15,7 +15,7 @@ git rm -r --quiet ./*
 cp -r ../../html/* ./
 git commit --all -m "Update docs"
 
-git push origin master
+# git push origin master
 )
 
 git commit --all -m "Updated docs submodule"
