@@ -18,8 +18,10 @@ ssh-add travis-deploy-website
 
 git clone --recursive git@github.com:neomutt/test-neomutt.github.io website
 
+cd website
+
 (
-  cd website/code
+  cd code
 
   # Remove the old docs
   git rm -r --quiet ./*
