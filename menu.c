@@ -1241,7 +1241,10 @@ static int menu_dialog_dokey(struct Menu *menu, int *ip)
   struct Event ch;
   char *p = NULL;
 
-  ch = mutt_getch();
+  do
+  {
+    ch = mutt_getch();
+  } while (ch.ch == -2);
 
   if (ch.ch < 0)
   {

@@ -674,7 +674,10 @@ int mutt_enter_string_full(char *buf, size_t buflen, int col, int flags, int mul
         case OP_EDITOR_QUOTE_CHAR:
         {
           struct Event event;
-          event = mutt_getch();
+          do
+          {
+            event = mutt_getch();
+          } while (event.ch == -2);
           if (event.ch >= 0)
           {
             LastKey = event.ch;
