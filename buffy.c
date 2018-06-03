@@ -52,6 +52,9 @@
 #ifdef USE_NOTMUCH
 #include "mutt_notmuch.h"
 #endif
+#ifdef USE_INOTIFY
+#include "monitor.h"
+#endif
 
 static time_t BuffyTime = 0; /**< last time we started checking for mail */
 static time_t BuffyStatsTime = 0; /**< last time we check performed mail_check_stats */
@@ -679,6 +682,10 @@ int mutt_parse_mailboxes(struct Buffer *path, struct Buffer *s,
 #ifdef USE_SIDEBAR
     mutt_sb_notify_mailbox(*b, 1);
 #endif
+#ifdef USE_INOTIFY
+    (*b)->magic = mx_get_magic ((*b)->path);
+    mutt_monitor_add (*b);
+#endif
   }
   return 0;
 }
@@ -736,6 +743,9 @@ int mutt_parse_unmailboxes(struct Buffer *path, struct Buffer *s,
         struct Buffy *next = (*b)->next;
 #ifdef USE_SIDEBAR
         mutt_sb_notify_mailbox(*b, 0);
+#endif
+#ifdef USE_INOTIFY
+        mutt_monitor_remove (*tmp);
 #endif
         buffy_free(b);
         *b = next;

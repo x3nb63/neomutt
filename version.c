@@ -210,6 +210,11 @@ static struct CompileOptions comp_opts[] = {
 #else
   { "idn", 0 },
 #endif
+#ifdef USE_INOTIFY
+  { "inotify", 1 },
+#else
+  { "inotify", 0 },
+#endif
 #ifdef LOCALES_HACK
   { "locales_hack", 1 },
 #else

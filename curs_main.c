@@ -71,6 +71,9 @@
 #ifdef USE_NNTP
 #include "nntp.h"
 #endif
+#ifdef USE_INOTIFY
+#include "monitor.h"
+#endif
 
 static const char *No_mailbox_is_open = N_("No mailbox is open.");
 static const char *There_are_no_messages = N_("There are no messages.");
@@ -448,6 +451,11 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
   {
     char *new_last_folder = NULL;
 
+#ifdef USE_INOTIFY
+          int monitor_remove_rc;
+
+          monitor_remove_rc = mutt_monitor_remove (NULL);
+#endif
 #ifdef USE_COMPRESSED
     if (Context->compress_info && Context->realpath)
       new_last_folder = mutt_str_strdup(Context->realpath);
@@ -459,6 +467,10 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
     int check = mx_mbox_close(Context, index_hint);
     if (check != 0)
     {
+#ifdef USE_INOTIFY
+      if (!monitor_remove_rc)
+        mutt_monitor_add (NULL);
+#endif
       if (check == MUTT_NEW_MAIL || check == MUTT_REOPENED)
         update_index(menu, Context, check, *oldcount, *index_hint);
 
@@ -490,6 +502,9 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
   if (Context)
   {
     menu->current = ci_first_message();
+#ifdef USE_INOTIFY
+    mutt_monitor_add (NULL);
+#endif
   }
   else
     menu->current = 0;
@@ -856,6 +871,9 @@ int mutt_index_menu(void)
     /* force the buffy check after we enter the folder */
     mutt_buffy_check(MUTT_BUFFY_CHECK_FORCE);
   }
+#ifdef USE_INOTIFY
+  mutt_monitor_add (NULL);
+#endif
 
   if (((Sort & SORT_MASK) == SORT_THREADS) && CollapseAll)
   {

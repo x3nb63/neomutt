@@ -57,6 +57,9 @@
 #ifdef USE_NOTMUCH
 #include "mutt_notmuch.h"
 #endif
+#ifdef USE_INOTIFY
+#include "monitor.h"
+#endif
 
 /* not possible to unget more than one char under some curses libs, and it
  * is impossible to unget function keys in SLang, so roll our own input
@@ -126,7 +129,12 @@ struct Event mutt_getch(void)
   ch = KEY_RESIZE;
   while (ch == KEY_RESIZE)
 #endif /* KEY_RESIZE */
-    ch = getch();
+#ifdef USE_INOTIFY
+    if (mutt_monitor_poll () != 0)
+      ch = ERR;
+    else
+#endif
+      ch = getch ();
   mutt_sig_allow_interrupt(0);
 
   if (SigInt)
