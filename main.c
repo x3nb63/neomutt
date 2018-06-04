@@ -75,9 +75,6 @@
 #ifdef USE_NNTP
 #include "nntp.h"
 #endif
-#ifdef USE_INOTIFY
-#include "monitor.h"
-#endif
 
 #define MUTT_IGNORE (1 << 0)  /* -z */
 #define MUTT_BUFFY (1 << 1)   /* -Z */

@@ -130,11 +130,11 @@ struct Event mutt_getch(void)
   while (ch == KEY_RESIZE)
 #endif /* KEY_RESIZE */
 #ifdef USE_INOTIFY
-    if (mutt_monitor_poll () != 0)
+    if (mutt_monitor_poll() != 0)
       ch = ERR;
     else
 #endif
-      ch = getch ();
+      ch = getch();
   mutt_sig_allow_interrupt(0);
 
   if (SigInt)

@@ -683,8 +683,8 @@ int mutt_parse_mailboxes(struct Buffer *path, struct Buffer *s,
     mutt_sb_notify_mailbox(*b, 1);
 #endif
 #ifdef USE_INOTIFY
-    (*b)->magic = mx_get_magic ((*b)->path);
-    mutt_monitor_add (*b);
+    (*b)->magic = mx_get_magic((*b)->path);
+    mutt_monitor_add(*b);
 #endif
   }
   return 0;
@@ -745,7 +745,7 @@ int mutt_parse_unmailboxes(struct Buffer *path, struct Buffer *s,
         mutt_sb_notify_mailbox(*b, 0);
 #endif
 #ifdef USE_INOTIFY
-        mutt_monitor_remove (*tmp);
+        mutt_monitor_remove(*b);
 #endif
         buffy_free(b);
         *b = next;

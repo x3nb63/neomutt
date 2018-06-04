@@ -452,9 +452,7 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
     char *new_last_folder = NULL;
 
 #ifdef USE_INOTIFY
-          int monitor_remove_rc;
-
-          monitor_remove_rc = mutt_monitor_remove (NULL);
+    int monitor_remove_rc = mutt_monitor_remove(NULL);
 #endif
 #ifdef USE_COMPRESSED
     if (Context->compress_info && Context->realpath)
@@ -469,7 +467,7 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
     {
 #ifdef USE_INOTIFY
       if (!monitor_remove_rc)
-        mutt_monitor_add (NULL);
+        mutt_monitor_add(NULL);
 #endif
       if (check == MUTT_NEW_MAIL || check == MUTT_REOPENED)
         update_index(menu, Context, check, *oldcount, *index_hint);
@@ -503,7 +501,7 @@ static int main_change_folder(struct Menu *menu, int op, char *buf,
   {
     menu->current = ci_first_message();
 #ifdef USE_INOTIFY
-    mutt_monitor_add (NULL);
+    mutt_monitor_add(NULL);
 #endif
   }
   else
@@ -872,7 +870,7 @@ int mutt_index_menu(void)
     mutt_buffy_check(MUTT_BUFFY_CHECK_FORCE);
   }
 #ifdef USE_INOTIFY
-  mutt_monitor_add (NULL);
+  mutt_monitor_add(NULL);
 #endif
 
   if (((Sort & SORT_MASK) == SORT_THREADS) && CollapseAll)

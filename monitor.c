@@ -1,82 +1,87 @@
-/* * Copyright (C) 2018 Gero Treuner <gero@70t.de>
+/**
+ * @file
+ * Monitor files for changes
  *
- *     This program is free software; you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation; either version 2 of the License, or
- *     (at your option) any later version.
+ * @authors
+ * Copyright (C) 2018 Gero Treuer <gero@70t.de>
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ * @copyright
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with this program; if not, write to the Free Software
- *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if HAVE_CONFIG_H
-# include "config.h"
-#endif
-
-#if HAVE_SYS_INOTIFY_H
-# include <sys/types.h>
-# include <sys/inotify.h>
-# include <unistd.h>
-# include <poll.h>
-#endif
-
-#include "mutt.h"
-#include "buffy.h"
+#include "config.h"
+#include <errno.h>
+#include <limits.h>
+#include <poll.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/inotify.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include "mutt/mutt.h"
 #include "monitor.h"
+#include "buffy.h"
+#include "context.h"
+#include "globals.h"
 #include "mx.h"
 
-#include <errno.h>
-#include <sys/stat.h>
-
-typedef struct monitor_t
+struct Monitor
 {
-  struct monitor_t *next;
+  struct Monitor *next;
   char *mh_backup_path;
   dev_t st_dev;
   ino_t st_ino;
   short magic;
-  int descr;
-}
-MONITOR;
+  int desc;
+};
 
 static int INotifyFd = -1;
-static MONITOR *Monitor = NULL;
+static struct Monitor *Monitor = NULL;
 static size_t PollFdsCount = 0;
 static size_t PollFdsLen = 0;
 static struct pollfd *PollFds;
 
-typedef struct monitorinfo_t
+int MonitorFilesChanged = 0;
+
+struct MonitorInfo
 {
   short magic;
   short isdir;
   const char *path;
   dev_t st_dev;
   ino_t st_ino;
-  MONITOR *monitor;
-  char _pathbuf[_POSIX_PATH_MAX]; /* access via path only (maybe not initialized) */
-}
-MONITORINFO;
+  struct Monitor *monitor;
+  char pathbuf[PATH_MAX]; /* access via path only (maybe not initialized) */
+};
 
-#define INOTIFY_MASK_DIR  (IN_MOVED_TO | IN_ATTRIB | IN_CLOSE_WRITE | IN_ISDIR)
+#define INOTIFY_MASK_DIR (IN_MOVED_TO | IN_ATTRIB | IN_CLOSE_WRITE | IN_ISDIR)
 #define INOTIFY_MASK_FILE IN_CLOSE_WRITE
 
 static void mutt_poll_fd_add(int fd, short events)
 {
   int i = 0;
-  for (i = 0; i < PollFdsCount && PollFds[i].fd != fd; ++i);
+  for (i = 0; i < PollFdsCount && PollFds[i].fd != fd; ++i)
+    ;
 
   if (i == PollFdsCount)
   {
     if (PollFdsCount == PollFdsLen)
     {
       PollFdsLen += 2;
-      safe_realloc (&PollFds, PollFdsLen * sizeof(struct pollfd));
+      mutt_mem_realloc(&PollFds, PollFdsLen * sizeof(struct pollfd));
     }
     ++PollFdsCount;
     PollFds[i].fd = fd;
@@ -89,24 +94,25 @@ static void mutt_poll_fd_add(int fd, short events)
 static int mutt_poll_fd_remove(int fd)
 {
   int i = 0, d;
-  for (i = 0; i < PollFdsCount && PollFds[i].fd != fd; ++i);
+  for (i = 0; i < PollFdsCount && PollFds[i].fd != fd; ++i)
+    ;
   if (i == PollFdsCount)
     return -1;
   d = PollFdsCount - i - 1;
   if (d)
-    memmove (&PollFds[i], &PollFds[i + 1], d * sizeof(struct pollfd));
+    memmove(&PollFds[i], &PollFds[i + 1], d * sizeof(struct pollfd));
   --PollFdsCount;
   return 0;
 }
 
-static int monitor_init ()
+static int monitor_init(void)
 {
   if (INotifyFd == -1)
   {
     INotifyFd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
     if (INotifyFd == -1)
     {
-      dprint (2, (debugfile, "monitor: inotify_init1 failed, errno=%d %s\n", errno, strerror(errno)));
+      mutt_debug(2, "monitor: inotify_init1 failed, errno=%d %s\n", errno, strerror(errno));
       return -1;
     }
     mutt_poll_fd_add(0, POLLIN);
@@ -115,41 +121,41 @@ static int monitor_init ()
   return 0;
 }
 
-static void monitor_check_free ()
+static void monitor_check_free(void)
 {
   if (!Monitor && INotifyFd != -1)
   {
     mutt_poll_fd_remove(INotifyFd);
-    close (INotifyFd);
+    close(INotifyFd);
     INotifyFd = -1;
     MonitorFilesChanged = 0;
   }
 }
 
-static MONITOR *monitor_create (MONITORINFO *info, int descriptor)
+static struct Monitor *monitor_create(struct MonitorInfo *info, int descriptor)
 {
-  MONITOR *monitor = (MONITOR *) safe_calloc (1, sizeof (MONITOR));
-  monitor->magic  = info->magic;
+  struct Monitor *monitor = (struct Monitor *) mutt_mem_calloc(1, sizeof(struct Monitor));
+  monitor->magic = info->magic;
   monitor->st_dev = info->st_dev;
   monitor->st_ino = info->st_ino;
-  monitor->descr  = descriptor;
-  monitor->next   = Monitor;
+  monitor->desc = descriptor;
+  monitor->next = Monitor;
   if (info->magic == MUTT_MH)
-    monitor->mh_backup_path = safe_strdup(info->path);
+    monitor->mh_backup_path = mutt_str_strdup(info->path);
 
   Monitor = monitor;
 
   return monitor;
 }
 
-static void monitor_delete (MONITOR *monitor)
+static void monitor_delete(struct Monitor *monitor)
 {
-  MONITOR **ptr = &Monitor;
+  struct Monitor **ptr = &Monitor;
 
   if (!monitor)
     return;
 
-  FOREVER
+  while (true)
   {
     if (!*ptr)
       return;
@@ -158,44 +164,47 @@ static void monitor_delete (MONITOR *monitor)
     ptr = &(*ptr)->next;
   }
 
-  FREE (&monitor->mh_backup_path); /* __FREE_CHECKED__ */
+  FREE(&monitor->mh_backup_path);
   monitor = monitor->next;
-  FREE (ptr); /* __FREE_CHECKED__ */
+  FREE(ptr);
   *ptr = monitor;
 }
 
-static int monitor_handle_ignore (int descr)
+static int monitor_handle_ignore(int desc)
 {
   int new_descr = -1;
-  MONITOR *iter = Monitor;
+  struct Monitor *iter = Monitor;
   struct stat sb;
 
-  while (iter && iter->descr != descr)
+  while (iter && iter->desc != desc)
     iter = iter->next;
 
   if (iter)
   {
-    if (iter->magic == MUTT_MH && stat (iter->mh_backup_path, &sb) == 0)
+    if (iter->magic == MUTT_MH && stat(iter->mh_backup_path, &sb) == 0)
     {
-      if ((new_descr = inotify_add_watch (INotifyFd, iter->mh_backup_path, INOTIFY_MASK_FILE)) == -1)
-        dprint (2, (debugfile, "monitor: inotify_add_watch failed for '%s', errno=%d %s\n", iter->mh_backup_path, errno, strerror(errno)));
+      if ((new_descr = inotify_add_watch(INotifyFd, iter->mh_backup_path,
+                                         INOTIFY_MASK_FILE)) == -1)
+        mutt_debug(2, "monitor: inotify_add_watch failed for '%s', errno=%d %s\n",
+                   iter->mh_backup_path, errno, strerror(errno));
       else
       {
-        dprint (3, (debugfile, "monitor: inotify_add_watch descriptor=%d for '%s'\n", descr, iter->mh_backup_path));
+        mutt_debug(3, "monitor: inotify_add_watch descriptor=%d for '%s'\n",
+                   desc, iter->mh_backup_path);
         iter->st_dev = sb.st_dev;
         iter->st_ino = sb.st_ino;
-        iter->descr = new_descr;
+        iter->desc = new_descr;
       }
     }
     else
     {
-      dprint (3, (debugfile, "monitor: cleanup watch (implicitely removed) - descriptor=%d\n", descr));
+      mutt_debug(3, "monitor: cleanup watch (implicitly removed) - descriptor=%d\n", desc);
     }
 
     if (new_descr == -1)
     {
-      monitor_delete (iter);
-      monitor_check_free ();
+      monitor_delete(iter);
+      monitor_check_free();
     }
   }
 
@@ -216,24 +225,23 @@ static int monitor_handle_ignore (int descr)
  * Only STDIN and INotify file handles currently expected/supported.
  * More would ask for common infrastructur (sockets?).
  */
-int mutt_monitor_poll ()
+int mutt_monitor_poll(void)
 {
   int rc = 0, fds, i, inputReady;
-  char buf[EVENT_BUFLEN]
-    __attribute__ ((aligned(__alignof__(struct inotify_event))));
+  char buf[EVENT_BUFLEN] __attribute__((aligned(__alignof__(struct inotify_event))));
 
   MonitorFilesChanged = 0;
 
   if (INotifyFd != -1)
   {
-    fds = poll (PollFds, PollFdsLen, -1);
+    fds = poll(PollFds, PollFdsLen, -1);
 
     if (fds == -1)
     {
       rc = -1;
       if (errno != EINTR)
       {
-        dprint (2, (debugfile, "monitor: poll() failed, errno=%d %s\n", errno, strerror(errno)));
+        mutt_debug(2, "monitor: poll() failed, errno=%d %s\n", errno, strerror(errno));
       }
     }
     else
@@ -251,29 +259,29 @@ int mutt_monitor_poll ()
           else if (PollFds[i].fd == INotifyFd)
           {
             MonitorFilesChanged = 1;
-            dprint (3, (debugfile, "monitor: file change(s) detected\n"));
+            mutt_debug(3, "monitor: file change(s) detected\n");
             int len;
             char *ptr = buf;
             const struct inotify_event *event;
 
-            FOREVER
+            while (true)
             {
-              len = read (INotifyFd, buf, sizeof(buf));
+              len = read(INotifyFd, buf, sizeof(buf));
               if (len == -1)
               {
                 if (errno != EAGAIN)
-                  dprint (2, (debugfile, "monitor: read inotify events failed, errno=%d %s\n",
-                              errno, strerror(errno)));
+                  mutt_debug(2, "monitor: read inotify events failed, errno=%d %s\n",
+                             errno, strerror(errno));
                 break;
               }
 
               while (ptr < buf + len)
               {
                 event = (const struct inotify_event *) ptr;
-                dprint (5, (debugfile, "monitor:  + detail: descriptor=%d mask=0x%x\n",
-                            event->wd, event->mask));
+                mutt_debug(5, "monitor:  + detail: descriptor=%d mask=0x%x\n",
+                           event->wd, event->mask);
                 if (event->mask & IN_IGNORED)
-                  monitor_handle_ignore (event->wd);
+                  monitor_handle_ignore(event->wd);
                 ptr += sizeof(struct inotify_event) + event->len;
               }
             }
@@ -288,36 +296,36 @@ int mutt_monitor_poll ()
   return rc;
 }
 
-#define RESOLVERES_OK_NOTEXISTING  0
-#define RESOLVERES_OK_EXISTING     1
+#define RESOLVERES_OK_NOTEXISTING 0
+#define RESOLVERES_OK_EXISTING 1
 #define RESOLVERES_FAIL_NOMAILBOX -3
-#define RESOLVERES_FAIL_NOMAGIC   -2
-#define RESOLVERES_FAIL_STAT      -1
+#define RESOLVERES_FAIL_NOMAGIC -2
+#define RESOLVERES_FAIL_STAT -1
 
-/* monitor_resolve: resolve monitor entry match by BUFFY, or - if NULL - by Context.
+/* monitor_resolve: resolve monitor entry match by struct Buffy, or - if NULL - by Context.
  *
  * return values:
  *      >=0   mailbox is valid and locally accessible:
  *              0: no monitor / 1: preexisting monitor
- *       -3   no mailbox (MONITORINFO: no fields set)
+ *       -3   no mailbox (struct MonitorInfo: no fields set)
  *       -2   magic not set
- *       -1   stat() failed (see errno; MONITORINFO fields: magic, isdir, path)
+ *       -1   stat() failed (see errno; struct MonitorInfo fields: magic, isdir, path)
  */
-static int monitor_resolve (MONITORINFO *info, BUFFY *buffy)
+static int monitor_resolve(struct MonitorInfo *info, struct Buffy *buffy)
 {
-  MONITOR *iter;
+  struct Monitor *iter;
   char *fmt = NULL;
   struct stat sb;
 
   if (buffy)
   {
     info->magic = buffy->magic;
-    info->path  = buffy->realpath;
+    info->path = buffy->realpath;
   }
   else if (Context)
   {
     info->magic = Context->magic;
-    info->path  = Context->realpath;
+    info->path = Context->realpath;
   }
   else
   {
@@ -342,10 +350,10 @@ static int monitor_resolve (MONITORINFO *info, BUFFY *buffy)
 
   if (fmt)
   {
-    snprintf (info->_pathbuf, sizeof(info->_pathbuf), fmt, info->path);
-    info->path = info->_pathbuf;
+    snprintf(info->pathbuf, sizeof(info->pathbuf), fmt, info->path);
+    info->path = info->pathbuf;
   }
-  if (stat (info->path, &sb) != 0)
+  if (stat(info->path, &sb) != 0)
     return RESOLVERES_FAIL_STAT;
 
   iter = Monitor;
@@ -359,68 +367,70 @@ static int monitor_resolve (MONITORINFO *info, BUFFY *buffy)
   return iter ? RESOLVERES_OK_EXISTING : RESOLVERES_OK_NOTEXISTING;
 }
 
-/* mutt_monitor_add: add file monitor from BUFFY, or - if NULL - from Context.
+/* mutt_monitor_add: add file monitor from struct Buffy, or - if NULL - from Context.
  *
  * return values:
  *       0   success: new or already existing monitor
  *      -1   failed:  no mailbox, inaccessible file, create monitor/watcher failed
  */
-int mutt_monitor_add (BUFFY *buffy)
+int mutt_monitor_add(struct Buffy *buffy)
 {
-  MONITORINFO info;
+  struct MonitorInfo info;
   uint32_t mask;
-  int descr;
+  int desc;
 
-  descr = monitor_resolve (&info, buffy);
-  if (descr != RESOLVERES_OK_NOTEXISTING)
-    return descr == RESOLVERES_OK_EXISTING ? 0 : -1;
+  desc = monitor_resolve(&info, buffy);
+  if (desc != RESOLVERES_OK_NOTEXISTING)
+    return desc == RESOLVERES_OK_EXISTING ? 0 : -1;
 
   mask = info.isdir ? INOTIFY_MASK_DIR : INOTIFY_MASK_FILE;
-  if ((INotifyFd == -1 && monitor_init () == -1)
-      || (descr = inotify_add_watch (INotifyFd, info.path, mask)) == -1)
+  if ((INotifyFd == -1 && monitor_init() == -1) ||
+      (desc = inotify_add_watch(INotifyFd, info.path, mask)) == -1)
   {
-    dprint (2, (debugfile, "monitor: inotify_add_watch failed for '%s', errno=%d %s\n", info.path, errno, strerror(errno)));
+    mutt_debug(2, "monitor: inotify_add_watch failed for '%s', errno=%d %s\n",
+               info.path, errno, strerror(errno));
     return -1;
   }
 
-  dprint (3, (debugfile, "monitor: inotify_add_watch descriptor=%d for '%s'\n", descr, info.path));
-  monitor_create (&info, descr);
+  mutt_debug(3, "monitor: inotify_add_watch descriptor=%d for '%s'\n", desc, info.path);
+  monitor_create(&info, desc);
   return 0;
 }
 
-/* mutt_monitor_remove: remove file monitor from BUFFY, or - if NULL - from Context.
+/* mutt_monitor_remove: remove file monitor from struct Buffy, or - if NULL - from Context.
  *
  * return values:
  *       0   monitor removed (not shared)
  *       1   monitor not removed (shared)
  *       2   no monitor
  */
-int mutt_monitor_remove (BUFFY *buffy)
+int mutt_monitor_remove(struct Buffy *buffy)
 {
-  MONITORINFO info, info2;
+  struct MonitorInfo info, info2;
 
-  if (monitor_resolve (&info, buffy) != RESOLVERES_OK_EXISTING)
+  if (monitor_resolve(&info, buffy) != RESOLVERES_OK_EXISTING)
     return 2;
 
   if (Context)
   {
     if (buffy)
     {
-      if (monitor_resolve (&info2, NULL) == RESOLVERES_OK_EXISTING
-          && info.st_ino == info2.st_ino && info.st_dev == info2.st_dev)
+      if (monitor_resolve(&info2, NULL) == RESOLVERES_OK_EXISTING &&
+          info.st_ino == info2.st_ino && info.st_dev == info2.st_dev)
         return 1;
     }
     else
     {
-      if (mutt_find_mailbox (Context->realpath))
+      if (mutt_find_mailbox(Context->realpath))
         return 1;
     }
   }
 
-  inotify_rm_watch(info.monitor->descr, INotifyFd);
-  dprint (3, (debugfile, "monitor: inotify_rm_watch for '%s' descriptor=%d\n", info.path, info.monitor->descr));
+  inotify_rm_watch(info.monitor->desc, INotifyFd);
+  mutt_debug(3, "monitor: inotify_rm_watch for '%s' descriptor=%d\n", info.path,
+             info.monitor->desc);
 
-  monitor_delete (info.monitor);
-  monitor_check_free ();
+  monitor_delete(info.monitor);
+  monitor_check_free();
   return 0;
 }
