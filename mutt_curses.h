@@ -113,6 +113,7 @@ struct Event
 
 struct Event mutt_getch(void);
 
+void mutt_getch_timeout(int delay);
 void mutt_endwin(void);
 void mutt_flushinp(void);
 void mutt_refresh(void);

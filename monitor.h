@@ -29,6 +29,7 @@ struct Buffy;
 
 int mutt_monitor_add(struct Buffy *b);
 int mutt_monitor_remove(struct Buffy *b);
+void mutt_monitor_set_poll_timeout(int timeout);
 int mutt_monitor_poll(void);
 
 #endif /* _MUTT_MONITOR_H */
