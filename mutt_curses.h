@@ -111,6 +111,8 @@ struct Event
   int op; /**< function op */
 };
 
+extern int MuttGetchTimeout;
+
 struct Event mutt_getch(void);
 
 void mutt_getch_timeout(int delay);
