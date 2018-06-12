@@ -457,6 +457,62 @@ fail:
   return SMTP_AUTH_FAIL;
 }
 
+/* smtp_auth_oauth: AUTH=OAUTHBEARER support. See RFC 7628 */
+static int smtp_auth_oauth(struct Connection *conn)
+{
+  char *ibuf = NULL;
+  char *oauth_buf = NULL;
+  int len, ilen, oalen;
+  int rc;
+
+  mutt_message(_("Authenticating (OAUTHBEARER)..."));
+
+  /* get auth info */
+  if (mutt_account_getlogin(&conn->account))
+    return SMTP_AUTH_FAIL;
+
+  /* We get the access token from the "smtp_pass" field */
+  if (mutt_account_getpass(&conn->account))
+    return SMTP_AUTH_FAIL;
+
+  /* Determine the length of the keyed message digest, add 50 for
+   * overhead.
+   */
+  oalen = strlen(conn->account.user) + strlen(conn->account.host) +
+          strlen(conn->account.pass) + 50;
+  oauth_buf = mutt_mem_malloc(oalen);
+
+  snprintf(oauth_buf, oalen, "n,a=%s,\001host=%s\001port=%d\001auth=Bearer %s\001\001",
+           conn->account.user, conn->account.host, conn->account.port,
+           conn->account.pass);
+
+  /* ibuf must be long enough to store the base64 encoding of
+   * oauth_buf, plus the additional debris.
+   */
+
+  ilen = strlen(oauth_buf) * 2 + 30;
+  ibuf = mutt_mem_malloc(ilen);
+  ibuf[0] = '\0';
+
+  mutt_str_strcat(ibuf, ilen, "AUTH OAUTHBEARER ");
+  len = strlen(ibuf);
+
+  mutt_b64_encode((char *) (ibuf + len), (char *) oauth_buf,
+                  mutt_str_strlen(oauth_buf), ilen - len);
+  mutt_str_strcat(ibuf, ilen, "\r\n");
+
+  rc = mutt_socket_write(conn, ibuf, mutt_str_strlen(ibuf));
+  FREE(&oauth_buf);
+  FREE(&ibuf);
+
+  if (rc == -1)
+    return SMTP_AUTH_FAIL;
+  if (smtp_get_resp(conn) != 0)
+    return SMTP_AUTH_FAIL;
+
+  return SMTP_AUTH_SUCCESS;
+}
+
 static int smtp_auth(struct Connection *conn)
 {
   int r = SMTP_AUTH_UNAVAIL;
@@ -477,11 +533,24 @@ static int smtp_auth(struct Connection *conn)
 
       mutt_debug(2, "Trying method %s\n", method);
 
-      r = smtp_auth_sasl(conn, method);
-
+      if (!mutt_str_strcmp(method, "oauthbearer"))
+      {
+        r = smtp_auth_oauth(conn);
+      }
+      else
+      {
+#ifdef USE_SASL
+        r = smtp_auth_sasl(conn, method);
+#else
+        mutt_error(_("SMTP authentication method %s requires SASL"), method);
+        mutt_sleep(1);
+        continue;
+#endif
+      }
       if (r == SMTP_AUTH_FAIL && delim)
       {
         mutt_error(_("%s authentication failed, trying next method"), method);
+        mutt_sleep(1);
       }
       else if (r != SMTP_AUTH_UNAVAIL)
         break;
@@ -724,3 +793,4 @@ int mutt_smtp_send(const struct Address *from, const struct Address *to,
 
   return rc;
 }
+
