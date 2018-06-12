@@ -102,12 +102,11 @@ static void print_enriched_string(int index, int attr, unsigned char *s, int do_
   wchar_t wc;
   size_t k;
   size_t n = mutt_str_strlen((char *) s);
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
 
   if (!stdscr)
     return;
 
-  memset(&mbstate, 0, sizeof(mbstate));
   while (*s)
   {
     if (*s < MUTT_TREE_MAX)

@@ -700,10 +700,9 @@ int mutt_multi_choice(char *prompt, char *letters)
 int mutt_addwch(wchar_t wc)
 {
   char buf[MB_LEN_MAX * 2];
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
   size_t n1, n2;
 
-  memset(&mbstate, 0, sizeof(mbstate));
   if ((n1 = wcrtomb(buf, wc, &mbstate)) == (size_t)(-1) ||
       (n2 = wcrtomb(buf + n1, 0, &mbstate)) == (size_t)(-1))
   {
@@ -738,11 +737,10 @@ void mutt_simple_format(char *buf, size_t buflen, int min_width, int max_width,
   int w;
   size_t k, k2;
   char scratch[MB_LEN_MAX];
-  mbstate_t mbstate1, mbstate2;
+  mbstate_t mbstate1 = { 0 };
+  mbstate_t mbstate2 = { 0 };
   int escaped = 0;
 
-  memset(&mbstate1, 0, sizeof(mbstate1));
-  memset(&mbstate2, 0, sizeof(mbstate2));
   buflen--;
   char *p = buf;
   for (; n && (k = mbrtowc(&wc, s, n, &mbstate1)); s += k, n -= k)
@@ -908,9 +906,8 @@ void mutt_paddstr(int n, const char *s)
   wchar_t wc;
   size_t k;
   size_t len = mutt_str_strlen(s);
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
 
-  memset(&mbstate, 0, sizeof(mbstate));
   for (; len && (k = mbrtowc(&wc, s, len, &mbstate)); s += k, len -= k)
   {
     if (k == (size_t)(-1) || k == (size_t)(-2))
@@ -951,14 +948,13 @@ size_t mutt_wstr_trunc(const char *src, size_t maxlen, size_t maxwid, size_t *wi
   wchar_t wc;
   size_t n, w = 0, l = 0, cl;
   int cw;
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
 
   if (!src)
     goto out;
 
   n = mutt_str_strlen(src);
 
-  memset(&mbstate, 0, sizeof(mbstate));
   for (w = 0; n && (cl = mbrtowc(&wc, src, n, &mbstate)); src += cl, n -= cl)
   {
     if (cl == (size_t)(-1) || cl == (size_t)(-2))
@@ -1001,14 +997,13 @@ int mutt_strwidth(const char *s)
   wchar_t wc;
   int w;
   size_t k, n;
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
 
   if (!s)
     return 0;
 
   n = mutt_str_strlen(s);
 
-  memset(&mbstate, 0, sizeof(mbstate));
   for (w = 0; n && (k = mbrtowc(&wc, s, n, &mbstate)); s += k, n -= k)
   {
     if (*s == MUTT_SPECIAL_INDEX)

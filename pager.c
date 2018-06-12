@@ -1128,10 +1128,9 @@ static int grok_ansi(unsigned char *buf, int pos, struct AnsiAttr *a)
  */
 static int trim_incomplete_mbyte(unsigned char *buf, size_t len)
 {
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
   size_t k;
 
-  memset(&mbstate, 0, sizeof(mbstate));
   for (; len > 0; buf += k, len -= k)
   {
     k = mbrtowc(NULL, (char *) buf, len, &mbstate);
@@ -1222,7 +1221,7 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
   size_t k;
   int ch, vch, last_special = -1, special = 0, t;
   wchar_t wc;
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
   int wrap_cols =
       mutt_window_wrap_cols(pager_window, (flags & MUTT_PAGER_NOWRAP) ? 0 : Wrap);
 
@@ -1230,8 +1229,6 @@ static int format_line(struct Line **line_info, int n, unsigned char *buf, int f
     wrap_cols = pager_window->cols;
 
   /* FIXME: this should come from line_info */
-  memset(&mbstate, 0, sizeof(mbstate));
-
   for (ch = 0, vch = 0; ch < cnt; ch += k, vch += k)
   {
     /* Handle ANSI sequences */

@@ -54,14 +54,13 @@ bool OptLocales; /**< (pseudo) set if user has valid locale definition */
 int mutt_mb_charlen(const char *s, int *width)
 {
   wchar_t wc;
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
   size_t k, n;
 
   if (!s || !*s)
     return 0;
 
   n = mutt_str_strlen(s);
-  memset(&mbstate, 0, sizeof(mbstate));
   k = mbrtowc(&wc, s, n, &mbstate);
   if (width)
     *width = wcwidth(wc);
@@ -229,11 +228,10 @@ size_t mutt_mb_width_ceiling(const wchar_t *s, size_t n, int w1)
  */
 void mutt_mb_wcstombs(char *dest, size_t dlen, const wchar_t *src, size_t slen)
 {
-  mbstate_t st;
+  mbstate_t st = { 0 };
   size_t k;
 
   /* First convert directly into the destination buffer */
-  memset(&st, 0, sizeof(st));
   for (; slen && dlen >= MB_LEN_MAX; dest += k, dlen -= k, src++, slen--)
   {
     k = wcrtomb(dest, *src, &st);
@@ -345,10 +343,8 @@ bool mutt_mb_is_shell_char(wchar_t ch)
 bool mutt_mb_is_lower(const char *s)
 {
   wchar_t w;
-  mbstate_t mb;
+  mbstate_t mb = { 0 };
   size_t l;
-
-  memset(&mb, 0, sizeof(mb));
 
   for (; (l = mbrtowc(&w, s, MB_CUR_MAX, &mb)) != 0; s += l)
   {
@@ -411,11 +407,10 @@ int mutt_mb_filter_unprintable(char **s)
   size_t k, k2;
   char scratch[MB_LEN_MAX + 1];
   char *p = *s;
-  mbstate_t mbstate1, mbstate2;
+  mbstate_t mbstate1 = { 0 };
+  mbstate_t mbstate2 = { 0 };
 
   struct Buffer *b = mutt_buffer_new();
-  memset(&mbstate1, 0, sizeof(mbstate1));
-  memset(&mbstate2, 0, sizeof(mbstate2));
   for (; (k = mbrtowc(&wc, p, MB_LEN_MAX, &mbstate1)); p += k)
   {
     if ((k == (size_t) -1) || (k == (size_t) -2))

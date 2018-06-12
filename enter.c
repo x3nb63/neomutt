@@ -180,10 +180,8 @@ int mutt_enter_string_full(char *buf, size_t buflen, int col, int flags, int mul
   size_t templen = 0;
   enum HistoryClass hclass;
   wchar_t wc;
-  mbstate_t mbstate;
-
+  mbstate_t mbstate = { 0 };
   int rc = 0;
-  memset(&mbstate, 0, sizeof(mbstate));
 
   if (state->wbuf)
   {

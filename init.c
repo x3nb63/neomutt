@@ -737,7 +737,7 @@ bail:
 static struct MbTable *parse_mbtable(const char *s)
 {
   size_t slen, k;
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
   char *d = NULL;
 
   struct MbTable *t = mutt_mem_calloc(1, sizeof(struct MbTable));
@@ -751,7 +751,6 @@ static struct MbTable *parse_mbtable(const char *s)
   t->chars = mutt_mem_calloc(slen, sizeof(char *));
   d = t->segmented_str = mutt_mem_calloc(slen * 2, sizeof(char));
 
-  memset(&mbstate, 0, sizeof(mbstate));
   while (slen && (k = mbrtowc(NULL, s, slen, &mbstate)))
   {
     if (k == (size_t)(-1) || k == (size_t)(-2))

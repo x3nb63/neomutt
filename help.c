@@ -108,10 +108,9 @@ static int print_macro(FILE *f, int maxwidth, const char **macro)
   wchar_t wc;
   size_t k;
   size_t len = mutt_str_strlen(*macro);
-  mbstate_t mbstate1, mbstate2;
+  mbstate_t mbstate1 = { 0 };
+  mbstate_t mbstate2 = { 0 };
 
-  memset(&mbstate1, 0, sizeof(mbstate1));
-  memset(&mbstate2, 0, sizeof(mbstate2));
   for (; len && (k = mbrtowc(&wc, *macro, len, &mbstate1)); *macro += k, len -= k)
   {
     if (k == (size_t)(-1) || k == (size_t)(-2))
@@ -172,9 +171,8 @@ static int get_wrapped_width(const char *t, size_t wid)
   size_t m, n;
   size_t len = mutt_str_strlen(t);
   const char *s = t;
-  mbstate_t mbstate;
+  mbstate_t mbstate = { 0 };
 
-  memset(&mbstate, 0, sizeof(mbstate));
   for (m = wid, n = 0; len && (k = mbrtowc(&wc, s, len, &mbstate)) && (n <= wid);
        s += k, len -= k)
   {

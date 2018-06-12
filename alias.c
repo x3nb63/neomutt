@@ -194,11 +194,9 @@ static void recode_buf(char *buf, size_t buflen)
 static int check_alias_name(const char *s, char *dest, size_t destlen)
 {
   wchar_t wc;
-  mbstate_t mb;
+  mbstate_t mb = { 0 };
   size_t l;
   int rc = 0, dry = !dest || !destlen;
-
-  memset(&mb, 0, sizeof(mbstate_t));
 
   if (!dry)
     destlen--;
