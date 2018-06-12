@@ -2117,8 +2117,7 @@ void mutt_select_file(char *f, size_t flen, int flags, char ***files, int *numfi
         if (OptNews)
         {
           struct NntpServer *nserv = CurrentNewsSrv;
-          regex_t rx;
-          memset(&rx, 0, sizeof(rx));
+          regex_t rx = { 0 };
           char *s = buf;
           int rc, j = menu->current;
 

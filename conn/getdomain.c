@@ -52,11 +52,10 @@ int getdnsdomainname(char *d, size_t len)
   if (gethostname(node, sizeof(node)) != 0)
     return rc;
 
-  struct addrinfo hints;
+  struct addrinfo hints = { 0 };
   struct addrinfo *h = NULL;
 
   *d = '\0';
-  memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_flags = AI_CANONNAME;
   hints.ai_family = AF_UNSPEC;
 

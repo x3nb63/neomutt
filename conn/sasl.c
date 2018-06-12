@@ -527,7 +527,6 @@ static int mutt_sasl_conn_poll(struct Connection *conn, time_t wait_secs)
  */
 int mutt_sasl_client_new(struct Connection *conn, sasl_conn_t **saslconn)
 {
-  sasl_security_properties_t secprops;
   struct sockaddr_storage local, remote;
   socklen_t size;
   char iplocalport[IP_PORT_BUFLEN], ipremoteport[IP_PORT_BUFLEN];
@@ -593,7 +592,7 @@ int mutt_sasl_client_new(struct Connection *conn, sasl_conn_t **saslconn)
     return -1;
   }
 
-  memset(&secprops, 0, sizeof(secprops));
+  sasl_security_properties_t secprops = { 0 };
   /* Work around a casting bug in the SASL krb4 module */
   secprops.max_ssf = 0x7fff;
   secprops.maxbufsize = MUTT_SASL_MAXBUF;

@@ -370,13 +370,11 @@ static int buffy_mbox_check(struct Buffy *mailbox, struct stat *sb, bool check_s
  */
 static void buffy_check(struct Buffy *tmp, struct stat *contex_sb, bool check_stats)
 {
-  struct stat sb;
+  struct stat sb = { 0 };
 #ifdef USE_SIDEBAR
   short orig_new;
   int orig_count, orig_unread, orig_flagged;
 #endif
-
-  memset(&sb, 0, sizeof(sb));
 
 #ifdef USE_SIDEBAR
   orig_new = tmp->new;

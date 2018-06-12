@@ -397,7 +397,8 @@ static void adjust_date_range(struct tm *min, struct tm *max)
 static bool eat_date(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
 {
   struct Buffer buffer;
-  struct tm min, max;
+  struct tm min = { 0 };
+  struct tm max = { 0 };
 
   mutt_buffer_init(&buffer);
   char *pexpr = s->dptr;
@@ -413,14 +414,11 @@ static bool eat_date(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
     return false;
   }
 
-  memset(&min, 0, sizeof(min));
   /* the `0' time is Jan 1, 1970 UTC, so in order to prevent a negative time
      when doing timezone conversion, we use Jan 2, 1970 UTC as the base
      here */
   min.tm_mday = 2;
   min.tm_year = 70;
-
-  memset(&max, 0, sizeof(max));
 
   /* Arbitrary year in the future.  Don't set this too high
      or mutt_date_make_time() returns something larger than will

@@ -2220,8 +2220,7 @@ static int nntp_date(struct NntpServer *nserv, time_t *now)
   {
     struct NntpData nntp_data;
     char buf[LONG_STRING];
-    struct tm tm;
-    memset(&tm, 0, sizeof(tm));
+    struct tm tm = { 0 };
 
     nntp_data.nserv = nserv;
     nntp_data.group = NULL;

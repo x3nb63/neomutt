@@ -229,9 +229,8 @@ void mutt_sig_unblock_system(int catch)
  */
 void mutt_sig_allow_interrupt(int disposition)
 {
-  struct sigaction sa;
+  struct sigaction sa = { 0 };
 
-  memset(&sa, 0, sizeof(sa));
   sa.sa_handler = sig_handler;
 #ifdef SA_RESTART
   if (disposition == 0)
