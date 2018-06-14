@@ -37,5 +37,6 @@ void mutt_log_stop(void);
 int  mutt_log_set_level(int level, bool verbose);
 int  mutt_log_set_file(const char *file, bool verbose);
 bool mutt_log_listener(const struct ConfigSet *cs, struct HashElem *he, const char *name, enum ConfigEvent ev);
+int  level_validator(const struct ConfigSet *cs, const struct ConfigDef *cdef, intptr_t value, struct Buffer *err);
 
 #endif /* _LOGGING2_H */
