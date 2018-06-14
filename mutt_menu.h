@@ -27,6 +27,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+struct ConfigSet;
+struct HashElem;
+enum ConfigEvent;
+
 #define REDRAW_INDEX          (1 << 0)
 #define REDRAW_MOTION         (1 << 1)
 #define REDRAW_MOTION_RESYNCH (1 << 2)
@@ -132,6 +136,8 @@ void         mutt_menu_set_current_redraw_full(void);
 void         mutt_menu_set_current_redraw(int redraw);
 void         mutt_menu_set_redraw_full(int menu_type);
 void         mutt_menu_set_redraw(int menu_type, int redraw);
+
+bool mutt_menu_listener(const struct ConfigSet *cs, struct HashElem *he, const char *name, enum ConfigEvent ev);
 
 /* used in both the index and pager index to make an entry. */
 void index_make_entry(char *buf, size_t buflen, struct Menu *menu, int num);

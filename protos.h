@@ -32,8 +32,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <wctype.h>
-#include "mutt.h"
 #include "mutt/mutt.h"
+#include "config/lib.h"
+#include "mutt.h"
 #include "format_flags.h"
 #include "options.h"
 
@@ -362,5 +363,7 @@ bool message_is_visible(struct Context *ctx, int index);
 
 bool set_default_value(const char *name, intptr_t value);
 void reset_value(const char *name);
+bool mutt_reply_listener(const struct ConfigSet *cs, struct HashElem *he,
+                         const char *name, enum ConfigEvent ev);
 
 #endif /* _MUTT_PROTOS_H */

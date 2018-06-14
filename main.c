@@ -51,6 +51,7 @@
 #include "envelope.h"
 #include "globals.h"
 #include "header.h"
+#include "history.h"
 #include "keymap.h"
 #include "mailbox.h"
 #include "mutt_curses.h"
@@ -709,6 +710,11 @@ int main(int argc, char *argv[], char *envp[])
   {
     goto main_ok; // TEST22: neomutt -B
   }
+
+  cs_add_listener(Config, mutt_hist_listener);
+  cs_add_listener(Config, mutt_log_listener);
+  cs_add_listener(Config, mutt_menu_listener);
+  cs_add_listener(Config, mutt_reply_listener);
 
   if (sendflags & SENDPOSTPONED)
   {

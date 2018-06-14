@@ -24,6 +24,7 @@
 #define _MUTT_HISTORY_H
 
 #include <stdbool.h>
+#include "config/lib.h"
 
 extern short History;
 extern char *HistoryFile;
@@ -56,5 +57,7 @@ void  mutt_hist_read_file(void);
 void  mutt_hist_reset_state(enum HistoryClass hclass);
 void  mutt_hist_save_scratch(enum HistoryClass hclass, const char *str);
 void  mutt_history_complete(char *buf, size_t buflen, enum HistoryClass hclass);
+
+bool mutt_hist_listener(const struct ConfigSet *cs, struct HashElem *he, const char *name, enum ConfigEvent ev);
 
 #endif /* _MUTT_HISTORY_H */
