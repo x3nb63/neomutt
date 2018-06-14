@@ -287,6 +287,76 @@ bool get_user_info(struct ConfigSet *cs)
 }
 
 /**
+ * test_parse_set - XXX
+ */
+void test_parse_set(void)
+{
+  char *vars[] = {
+    "from",        // ADDRESS
+    "beep",        // BOOL
+    "shell",       // COMMAND
+    "mbox_type",   // MAGIC
+    "to_chars",    // MBTABLE
+    "net_inc",     // NUMBER
+    "shell",       // PATH
+    "print",       // QUAD
+    "mask",        // REGEX
+    "sort",        // SORT
+    "attribution", // STRING
+    "zzz",         // UNKNOWN
+    "my_var",      // MY_VAR
+  };
+
+  // ENUM
+  // HCACHE
+  // LONG
+  // SLIST
+
+  char *commands[] = {
+    "set",
+    "toggle",
+    "reset",
+    "unset",
+  };
+
+  char *tests[] = {
+    "%s %s",       "%s %s=42",  "%s %s?",     "%s ?%s",    "%s ?%s=42",
+    "%s ?%s?",     "%s no%s",   "%s no%s=42", "%s no%s?",  "%s inv%s",
+    "%s inv%s=42", "%s inv%s?", "%s &%s",     "%s &%s=42", "%s &%s?",
+  };
+
+  struct Buffer *tmp = mutt_buffer_alloc(STRING);
+  struct Buffer *err = mutt_buffer_alloc(STRING);
+  char line[64];
+
+  for (size_t v = 0; v < mutt_array_size(vars); v++)
+  {
+    // printf("--------------------------------------------------------------------------------\n");
+    // printf("VARIABLE %s\n", vars[v]);
+    for (size_t c = 0; c < mutt_array_size(commands); c++)
+    {
+      // printf("----------------------------------------\n");
+      // printf("COMMAND %s\n", commands[c]);
+      for (size_t t = 0; t < mutt_array_size(tests); t++)
+      {
+        mutt_buffer_reset(tmp);
+        mutt_buffer_reset(err);
+
+        snprintf(line, sizeof(line), tests[t], commands[c], vars[v]);
+        printf("%-26s", line);
+        int rc = mutt_parse_rc_line(line, tmp, err);
+        printf("%2d %s\n", rc, NONULL(err->data));
+      }
+      printf("\n");
+    }
+    // printf("\n");
+  }
+
+  mutt_buffer_free(&tmp);
+  mutt_buffer_free(&err);
+}
+
+/**
  * main - Start NeoMutt
  * @param argc Number of command line arguments
  * @param argv List of command line arguments
@@ -490,6 +560,14 @@ int main(int argc, char *argv[], char *envp[])
   Config = init_config(500);
   if (!Config)
     goto main_curses;
+
+#if 0
+  cs_str_initial_set(Config, "from", "rich@flatcap.org", NULL);
+  cs_str_reset(Config, "from", NULL);
+  myvar_set("my_var", "foo");
+  test_parse_set();
+  return 0;
+#endif
 
   // {
   //   struct Buffer *value = mutt_buffer_alloc(STRING);
