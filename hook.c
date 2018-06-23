@@ -79,7 +79,8 @@ int mutt_parse_hook(struct Buffer *buf, struct Buffer *s, unsigned long data,
                     struct Buffer *err)
 {
   struct Hook *ptr = NULL;
-  struct Buffer command, pattern;
+  struct Buffer command = { 0 };
+  struct Buffer pattern = { 0 };
   int rc;
   bool not = false;
   regex_t *rx = NULL;
@@ -374,14 +375,13 @@ int mutt_parse_unhook(struct Buffer *buf, struct Buffer *s, unsigned long data,
 void mutt_folder_hook(const char *path)
 {
   struct Hook *tmp = NULL;
-  struct Buffer err, token;
+  struct Buffer err = { 0 };
+  struct Buffer token = { 0 };
 
   current_hook_type = MUTT_FOLDERHOOK;
 
-  mutt_buffer_init(&err);
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
-  mutt_buffer_init(&token);
   TAILQ_FOREACH(tmp, &Hooks, entries)
   {
     if (!tmp->command)
@@ -440,16 +440,15 @@ char *mutt_find_hook(int type, const char *pat)
  */
 void mutt_message_hook(struct Context *ctx, struct Header *hdr, int type)
 {
-  struct Buffer err, token;
+  struct Buffer err = { 0 };
+  struct Buffer token = { 0 };
   struct Hook *hook = NULL;
   struct PatternCache cache = { 0 };
 
   current_hook_type = type;
 
-  mutt_buffer_init(&err);
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
-  mutt_buffer_init(&token);
   TAILQ_FOREACH(hook, &Hooks, entries)
   {
     if (!hook->command)
@@ -622,16 +621,14 @@ void mutt_account_hook(const char *url)
   static bool inhook = false;
 
   struct Hook *hook = NULL;
-  struct Buffer token;
-  struct Buffer err;
+  struct Buffer token = { 0 };
+  struct Buffer err = { 0 };
 
   if (inhook)
     return;
 
-  mutt_buffer_init(&err);
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
-  mutt_buffer_init(&token);
 
   TAILQ_FOREACH(hook, &Hooks, entries)
   {
@@ -670,14 +667,12 @@ void mutt_account_hook(const char *url)
 void mutt_timeout_hook(void)
 {
   struct Hook *hook = NULL;
-  struct Buffer token;
-  struct Buffer err;
+  struct Buffer token = { 0 };
+  struct Buffer err = { 0 };
   char buf[STRING];
 
-  mutt_buffer_init(&err);
   err.data = buf;
   err.dsize = sizeof(buf);
-  mutt_buffer_init(&token);
 
   TAILQ_FOREACH(hook, &Hooks, entries)
   {

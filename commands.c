@@ -656,18 +656,18 @@ void mutt_shell_escape(void)
  */
 void mutt_enter_command(void)
 {
-  struct Buffer err, token;
   char buffer[LONG_STRING];
-  int r;
 
   buffer[0] = '\0';
   if (mutt_get_field(":", buffer, sizeof(buffer), MUTT_COMMAND) != 0 || !buffer[0])
     return;
-  mutt_buffer_init(&err);
+
+  struct Buffer err = { 0 };
+  struct Buffer token = { 0 };
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
-  mutt_buffer_init(&token);
-  r = mutt_parse_rc_line(buffer, &token, &err);
+
+  int r = mutt_parse_rc_line(buffer, &token, &err);
   FREE(&token.data);
   if (err.data[0])
   {

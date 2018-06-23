@@ -380,12 +380,11 @@ static size_t escape_string(char *buf, size_t buflen, const char *src)
  */
 static int execute_commands(struct ListHead *p)
 {
-  struct Buffer err, token;
+  struct Buffer err = { 0 };
+  struct Buffer token = { 0 };
 
-  mutt_buffer_init(&err);
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
-  mutt_buffer_init(&token);
   struct ListNode *np;
   STAILQ_FOREACH(np, p, entries)
   {
@@ -1206,7 +1205,6 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
 {
   FILE *f = NULL;
   int line = 0, rc = 0, line_rc, warnings = 0;
-  struct Buffer token;
   char *linebuf = NULL;
   char *currentline = NULL;
   char rcfile[PATH_MAX];
@@ -1260,7 +1258,7 @@ static int source_rc(const char *rcfile_path, struct Buffer *err)
     return -1;
   }
 
-  mutt_buffer_init(&token);
+  struct Buffer token = { 0 };
   while ((linebuf = mutt_file_read_line(linebuf, &buflen, f, &line, MUTT_CONT)) != NULL)
   {
     const int conv = ConfigCharset && (*ConfigCharset) && Charset;
@@ -2718,9 +2716,7 @@ static int parse_source(struct Buffer *buf, struct Buffer *s,
 static int parse_spam_list(struct Buffer *buf, struct Buffer *s,
                            unsigned long data, struct Buffer *err)
 {
-  struct Buffer templ;
-
-  mutt_buffer_init(&templ);
+  struct Buffer templ = { 0 };
 
   /* Insist on at least one parameter */
   if (!MoreArgs(s))
@@ -3423,10 +3419,8 @@ int mutt_dump_variables(bool hide_sensitive)
 {
   char command[STRING];
 
-  struct Buffer err, token;
-
-  mutt_buffer_init(&err);
-  mutt_buffer_init(&token);
+  struct Buffer err = { 0 };
+  struct Buffer token = { 0 };
 
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
@@ -3562,7 +3556,6 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
       pid_t pid;
       char *ptr = NULL;
       size_t expnlen;
-      struct Buffer expn;
       int line = 0;
 
       pc = tok->dptr;
@@ -3581,8 +3574,7 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
         mutt_debug(1, "mismatched backticks\n");
         return -1;
       }
-      struct Buffer cmd;
-      mutt_buffer_init(&cmd);
+      struct Buffer cmd = { 0 };
       *pc = '\0';
       if (flags & MUTT_TOKEN_BACKTICK_VARS)
       {
@@ -3608,7 +3600,7 @@ int mutt_extract_token(struct Buffer *dest, struct Buffer *tok, int flags)
       tok->dptr = pc + 1;
 
       /* read line */
-      mutt_buffer_init(&expn);
+      struct Buffer expn = { 0 };
       expn.data = mutt_file_read_line(NULL, &expn.dsize, fp, &line, 0);
       mutt_file_fclose(&fp);
       mutt_wait_filter(pid);
@@ -3809,9 +3801,8 @@ int mutt_init(bool skip_sys_rc, struct ListHead *commands)
 {
   char buffer[LONG_STRING];
   int need_pause = 0;
-  struct Buffer err;
+  struct Buffer err = { 0 };
 
-  mutt_buffer_init(&err);
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
   err.dptr = err.data;
@@ -3846,15 +3837,14 @@ int mutt_init(bool skip_sys_rc, struct ListHead *commands)
   p = mutt_str_getenv("REPLYTO");
   if (p)
   {
-    struct Buffer buf, token;
+    struct Buffer buf = { 0 };
+    struct Buffer token = { 0 };
 
     snprintf(buffer, sizeof(buffer), "Reply-To: %s", p);
 
-    mutt_buffer_init(&buf);
     buf.data = buf.dptr = buffer;
     buf.dsize = mutt_str_strlen(buffer);
 
-    mutt_buffer_init(&token);
     parse_my_hdr(&token, &buf, 0, &err);
     FREE(&token.data);
   }
@@ -4290,12 +4280,11 @@ int mutt_option_to_string(const struct Option *opt, char *val, size_t len)
 int mutt_parse_rc_line(/* const */ char *line, struct Buffer *token, struct Buffer *err)
 {
   int i, r = 0;
-  struct Buffer expn;
 
   if (!line || !*line)
     return 0;
 
-  mutt_buffer_init(&expn);
+  struct Buffer expn = { 0 };
   expn.data = expn.dptr = line;
   expn.dsize = mutt_str_strlen(line);
 
@@ -4347,10 +4336,8 @@ int mutt_query_variables(struct ListHead *queries)
 {
   char command[STRING];
 
-  struct Buffer err, token;
-
-  mutt_buffer_init(&err);
-  mutt_buffer_init(&token);
+  struct Buffer err = { 0 };
+  struct Buffer token = { 0 };
 
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);

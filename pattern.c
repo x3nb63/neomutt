@@ -190,11 +190,10 @@ static char LastSearchExpn[LONG_STRING] = { 0 }; /**< expanded version of LastSe
  */
 static bool eat_regex(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
 {
-  struct Buffer buf;
+  struct Buffer buf = { 0 };
   char errmsg[STRING];
   int r;
 
-  mutt_buffer_init(&buf);
   char *pexpr = s->dptr;
   if (mutt_extract_token(&buf, s, MUTT_TOKEN_PATTERN | MUTT_TOKEN_COMMENT) != 0 || !buf.data)
   {
@@ -464,10 +463,9 @@ static void adjust_date_range(struct tm *min, struct tm *max)
  */
 static bool eat_date(struct Pattern *pat, struct Buffer *s, struct Buffer *err)
 {
-  struct Buffer buffer;
+  struct Buffer buffer = { 0 };
   struct tm min, max;
 
-  mutt_buffer_init(&buffer);
   char *pexpr = s->dptr;
   if (mutt_extract_token(&buffer, s, MUTT_TOKEN_COMMENT | MUTT_TOKEN_PATTERN) != 0 ||
       !buffer.data)
@@ -1267,9 +1265,8 @@ struct Pattern *mutt_pattern_comp(/* const */ char *s, int flags, struct Buffer 
   const struct PatternFlags *entry = NULL;
   char *p = NULL;
   char *buf = NULL;
-  struct Buffer ps;
+  struct Buffer ps = { 0 };
 
-  mutt_buffer_init(&ps);
   ps.dptr = s;
   ps.dsize = mutt_str_strlen(s);
 
@@ -2210,7 +2207,6 @@ int mutt_pattern_func(int op, char *prompt)
 {
   struct Pattern *pat = NULL;
   char buf[LONG_STRING] = "", *simple = NULL;
-  struct Buffer err;
   int rc = -1;
   struct Progress progress;
 
@@ -2224,7 +2220,7 @@ int mutt_pattern_func(int op, char *prompt)
   simple = mutt_str_strdup(buf);
   mutt_check_simple(buf, sizeof(buf), NONULL(SimpleSearch));
 
-  mutt_buffer_init(&err);
+  struct Buffer err = { 0 };
   err.dsize = STRING;
   err.data = mutt_mem_malloc(err.dsize);
   pat = mutt_pattern_comp(buf, MUTT_FULL_MSG, &err);
@@ -2363,8 +2359,7 @@ int mutt_search_command(int cur, int op)
 
     if (!SearchPattern || (mutt_str_strcmp(temp, LastSearchExpn) != 0))
     {
-      struct Buffer err;
-      mutt_buffer_init(&err);
+      struct Buffer err = { 0 };
       OptSearchInvalid = true;
       mutt_str_strfcpy(LastSearch, buf, sizeof(LastSearch));
       mutt_message(_("Compiling search pattern..."));

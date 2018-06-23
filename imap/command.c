@@ -472,7 +472,6 @@ static void cmd_parse_lsub(struct ImapData *idata, char *s)
 {
   char buf[STRING];
   char errstr[STRING];
-  struct Buffer err, token;
   struct Url url;
   struct ImapList list;
 
@@ -506,8 +505,9 @@ static void cmd_parse_lsub(struct ImapData *idata, char *s)
     url.user = NULL;
   url_tostring(&url, buf + 11, sizeof(buf) - 11, 0);
   mutt_str_strcat(buf, sizeof(buf), "\"");
-  mutt_buffer_init(&token);
-  mutt_buffer_init(&err);
+
+  struct Buffer err = { 0 };
+  struct Buffer token = { 0 };
   err.data = errstr;
   err.dsize = sizeof(errstr);
   if (mutt_parse_rc_line(buf, &token, &err))

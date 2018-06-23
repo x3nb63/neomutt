@@ -984,11 +984,9 @@ int mutt_parse_push(struct Buffer *buf, struct Buffer *s, unsigned long data,
 static char *parse_keymap(int *menu, struct Buffer *s, int maxmenus,
                           int *nummenus, struct Buffer *err, bool bind)
 {
-  struct Buffer buf;
+  struct Buffer buf = { 0 };
   int i = 0;
   char *q = NULL;
-
-  mutt_buffer_init(&buf);
 
   /* menu name */
   mutt_extract_token(&buf, s, 0);
