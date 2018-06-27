@@ -2108,7 +2108,7 @@ int mutt_index_menu(void)
          * again while reading the message.
          */
         if (op == OP_DISPLAY_HEADERS)
-          Weed = !Weed;
+          bool_str_toggle(Config, "weed", NULL);
 
         OptNeedResort = false;
 
@@ -3316,7 +3316,7 @@ int mutt_index_menu(void)
         break;
 
       case OP_SIDEBAR_TOGGLE_VISIBLE:
-        SidebarVisible = !SidebarVisible;
+        bool_str_toggle(Config, "sidebar_visible", NULL);
         mutt_window_reflow();
         break;
 
