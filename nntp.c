@@ -31,6 +31,7 @@
 #include "config.h"
 #include <ctype.h>
 #include <limits.h>
+#include <stdbool.h>
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
@@ -43,7 +44,6 @@
 #include "globals.h"
 #include "mailbox.h"
 #include "mutt_account.h"
-#include "mutt_curses.h"
 #include "mutt_logging.h"
 #include "mutt_socket.h"
 #include "mutt_thread.h"
@@ -1286,7 +1286,7 @@ static int nntp_fetch_headers(struct Context *ctx, void *hc, anum_t first,
   fc.restore = restore;
   fc.messages = mutt_mem_calloc(last - first + 1, sizeof(unsigned char));
   if (fc.messages == NULL)
-	  return -1;
+    return -1;
 #ifdef USE_HCACHE
   fc.hc = hc;
 #endif
